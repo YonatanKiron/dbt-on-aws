@@ -4,12 +4,8 @@ metadata:
   labels:
     app: spark-thrift-server-driver
 spec:
-  nodeSelector:
-    type: karpenter
-    provisioner: spark-driver
-  tolerations:
-    - key: spark-driver
-      operator: Exists
-      effect: NoSchedule
   containers:
     - name: spark-kubernetes-driver
+      resources:
+        limits:
+          memory: 16Gi

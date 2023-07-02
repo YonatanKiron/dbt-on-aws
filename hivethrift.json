@@ -1,0 +1,59 @@
+{
+    "name": "spark-hive-via-thrift",
+    "virtualClusterId": "kqpkangqa6fbu5vjypls63bt1",
+    "executionRoleArn": "arn:aws:iam::723714929196:role/emr-on-eks-production-job-execution-role",
+    "releaseLabel": "emr-6.10.0-latest",
+    "jobDriver": {
+        "sparkSubmitJobDriver": {
+            "entryPoint": "s3://pgy-emr-prod/tasks/hivethrift_emr.py",
+            "entryPointArguments":    ["--database=unsec", "--schema=canonic_positions", "--table=dignifi_all"],
+            "sparkSubmitParameters": "--py-files=s3://pgy-emr-prod/config/toad_infra.zip,s3://pgy-emr-prod/config/config.yaml  --jars local:///usr/share/aws/iceberg/lib/iceberg-spark3-runtime.jar,s3://pgy-emr-prod/jars/snowflake-jdbc-3.13.14.jar,s3://pgy-emr-prod/jars/spark-snowflake_2.12-2.10.0-spark_3.2.jar --conf spark.executor.instances=10 --conf spark.executor.memory=16G --conf spark.driver.memory=16G --conf spark.executor.cores=4"
+        }
+    },
+    "configurationOverrides": {
+        "applicationConfiguration": [
+            {
+                "classification": "spark-env",
+                "configurations": [
+                    {
+                        "classification": "export",
+                        "properties": {
+                            "PYSPARK_PYTHON": "/usr/local/bin/python3.8",
+                            "PYSPARK_DRIVER_PYTHON": "/usr/local/bin/python3.8",
+                            "ENV": "prod",
+                           "LEGACY": "False"
+                        }
+                    }
+                ],
+                "properties": {}
+            },
+            {
+                "classification": "spark-defaults",
+                "properties": {
+                        "spark.kubernetes.container.image": "704102000649.dkr.ecr.us-east-1.amazonaws.com/emr6.10.0_custom:1.0.12",
+                        "spark.sql.catalog.nessie_catalog": "org.apache.iceberg.spark.SparkCatalog",
+                        "spark.jars.packages": "org.apache.iceberg:iceberg-spark-runtime-3.3_2.12:1.1.0,org.projectnessie.nessie-integrations:nessie-spark-extensions-3.3_2.12:0.51.1",
+                        "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions,org.projectnessie.spark.extensions.NessieSparkSessionExtensions",
+                        "spark.sql.defaultCatalog": "nessie_catalog",
+                        "spark.sql.execution.pyarrow.enabled": "true",
+                        "spark.sql.catalog.nessie_catalog.uri": "https://nessie-prod.prod.pagaya.cloud/api/v1",
+                        "spark.sql.catalog.nessie_catalog.catalog-impl": "org.apache.iceberg.nessie.NessieCatalog",
+                        "spark.sql.catalog.nessie_catalog.warehouse": "s3://pgy-snowflake-inbox-prod/nessie_catalog/",
+                        "spark.sql.catalog.nessie_catalog.ref": "main",
+                        "spark.sql.catalog.nessie_catalog.auth_type": "NONE",
+                        "iceberg.enabled": "true",
+                        "hive.metastore.uris": "thrift://spark-thrift-server-service:10001"
+                }
+            }
+        ],
+        "monitoringConfiguration": {
+            "cloudWatchMonitoringConfiguration": {
+                "logGroupName": "/emr-containers/jobs",
+                "logStreamNamePrefix": "demo"
+            },
+            "s3MonitoringConfiguration": {
+                "logUri": "s3://pgy-emr-prod/logs/eks/joblogs"
+            }
+        }
+    }
+}
